@@ -1,12 +1,24 @@
 var ProductSearch = React.createClass({
+    getInitialState: function () {
+        return {data: []};
+    },
+    componentDidMount: function () {
+        this.searchProducts();
+    },
+    searchProducts: function (qData) {
+        $.get(this.props.url, qData, function (data) {
+            this.setState({data: data});
+        }.bind(this), 'JSON');
+    },
     render: function () {
-        var categories = this.props.data.map(function (category) {
+        var categories = this.state.data.map(function (category) {
             return (<Category name={category.name} data={category.products} key={category.id} />);
         });
 
         return (
             <div className="productSearch">
-                <SearchForm />
+                <h1>Product search</h1>
+                <SearchForm handleSearch={this.searchProducts} />
                 {categories}
             </div>
         );
@@ -14,10 +26,25 @@ var ProductSearch = React.createClass({
 });
 
 var SearchForm = React.createClass({
+    getInitialState: function () {
+        return {q: ''};
+    },
+    handleSearchChange: function (e) {
+        e.preventDefault();
+
+        var qData = {q: e.target.value};
+        this.setState(qData);
+        this.props.handleSearch(qData);
+    },
     render: function () {
         return (
             <form className="searchForm">
-                <input type="search" placeholder="Search..." />
+                <input
+                    type="search"
+                    placeholder="Search..."
+                    value={this.state.q}
+                    onChange={this.handleSearchChange}
+                />
             </form>
         );
     }
@@ -56,25 +83,7 @@ var Product = React.createClass({
     }
 });
 
-var products = [
-    {
-        id: 1,
-        name: "Toys",
-        products: [
-            {id: 1, name: "Teddy Bear", price: 123},
-            {id: 2, name: "Police Car", price: 300}
-        ]
-    }, {
-        id: 2,
-        name: "Stationery",
-        products: [
-            {id: 3, name: "White Paper", price: 2},
-            {id: 4, name: "Colour Envelope", price: 11},
-        ]
-    }
-];
-
 ReactDOM.render(
-    <ProductSearch data={products} />,
+    <ProductSearch url="api/search.php" />,
     document.getElementById('content')
 );
