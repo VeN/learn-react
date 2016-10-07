@@ -1,9 +1,29 @@
 var CommentBox  = React.createClass({
+    getInitialState: function () {
+        return {data: []};
+    },
+    loadCommentsFromServer: function () {
+        $.ajax({
+            url: this.props.url,
+            dataType: 'json',
+            cache: false,
+            success: function (data) {
+                this.setState({data: data});
+            }.bind(this),
+            error: function (xhr, status, err) {
+                console.log(this.props.url, status, err.toString());
+            }.bind(this)
+        });
+    },
+    componentDidMount: function () {
+        this.loadCommentsFromServer();
+        setInterval(this.loadCommentsFromServer, this.props.pollInterval);
+    },
     render: function() {
         return (
             <div className="commentBox">
                 <h1>Comments</h1>
-                <CommentList data={this.props.data} />
+                <CommentList data={this.state.data} />
                 <CommentForm />
             </div>
         );
@@ -55,20 +75,7 @@ var Comment = React.createClass({
     }
 });
 
-var comments = [
-    {
-        id: 1,
-        author: "John Snow",
-        text: "Upon being guided into the inner-sanctum at the Oculus Connect developers conference."
-    },
-    {
-        id: 2,
-        author: "Disguised Toast",
-        text: "Snap is *reportedly* preparing for an IPO that could value it at $25B or higher"
-    }
-];
-
 ReactDOM.render(
-    <CommentBox data={comments} />,
+    <CommentBox url="api/comments.php" pollInterval={1000} />,
     document.getElementById('content')
 );
