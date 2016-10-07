@@ -1,22 +1,22 @@
 <?php
 
-$data = [
-    [
-        'id' => 1,
-        'author' => "John Snow",
-        'text' => "Upon being guided into the inner-sanctum at the Oculus Connect developers conference.",
-    ],
-    [
-        'id' => 2,
-        'author' => "Disguised Toast",
-        'text' => "Snap is *reportedly* preparing for an IPO that could value it at $25B or higher",
-    ],
-    [
-        'id' => 3,
-        'author' => "Moo Cow",
-        'text' => "*What are you saying?!*",
-    ]
-];
+const DB_NAME = __DIR__ . '/comments.json';
+
+$db = file_get_contents(DB_NAME);
+$comments = json_decode($db);
+$commentsString = null;
+
+if ($_POST) {
+    if (!array_key_exists('author', $_POST) || !array_key_exists('text', $_POST) ) {
+        die();
+    }
+    $comments[] = ['id' => uniqid(), 'author' => $_POST['author'], 'text' => $_POST['text']];
+
+    $commentsString = json_encode($comments);
+    file_put_contents(DB_NAME, $commentsString);
+}
 
 header('Context-type: application/json');
-die(json_encode($data));
+
+$output = $commentsString ? $commentsString : $db;
+die($output);

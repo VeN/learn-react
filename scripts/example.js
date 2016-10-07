@@ -19,12 +19,27 @@ var CommentBox  = React.createClass({
         this.loadCommentsFromServer();
         setInterval(this.loadCommentsFromServer, this.props.pollInterval);
     },
+    handleCommentSubmit: function (comment) {
+        console.log(comment);
+        $.ajax({
+            url: this.props.url,
+            dataType: 'json',
+            type: 'POST',
+            data: comment,
+            success: function (data) {
+                this.setState({data: data});
+            }.bind(this),
+            error: function (xhr, status, err) {
+                console.log(this.props.url, status, err);
+            }.bind(this)
+        });
+    },
     render: function() {
         return (
             <div className="commentBox">
                 <h1>Comments</h1>
                 <CommentList data={this.state.data} />
-                <CommentForm />
+                <CommentForm onCommentSubmit={this.handleCommentSubmit}/>
             </div>
         );
     }
@@ -48,11 +63,47 @@ var CommentList = React.createClass({
 });
 
 var CommentForm = React.createClass({
+    getInitialState: function () {
+        return {author: '', text: ''}
+    },
+    handleAuthorChange: function (e) {
+        this.setState({author: e.target.value});
+    },
+    handleTextChange: function (e) {
+        this.setState({text: e.target.value});
+    },
+    handleSubmit: function (e) {
+        e.preventDefault();
+        var author = this.state.author.trim();
+        var text = this.state.text.trim();
+        if (!author || !text) {
+            return;
+        }
+
+        this.props.onCommentSubmit({author: author, text: text});
+
+        this.setState({author: '', text: ''});
+    },
     render: function () {
         return (
-            <div className="commentForm">
-                I am a Comment Form.
-            </div>
+            <form className="commentForm" onSubmit={this.handleSubmit}>
+                <h1>Add a comment</h1>
+                <p>
+                    <input type="text"
+                       placeholder="Your name"
+                       value={this.state.author}
+                       onChange={this.handleAuthorChange}
+                    /><br />
+                </p>
+                <p>
+                    <input type="text"
+                       placeholder="Say something..."
+                       value={this.state.text}
+                       onChange={this.handleTextChange}
+                    /><br />
+                </p>
+                <input type="submit" value="Add" />
+            </form>
         );
     }
 });
@@ -66,9 +117,7 @@ var Comment = React.createClass({
     render: function () {
         return (
             <div className="comment">
-                <h2 className="author">
-                    {this.props.author}
-                </h2>
+                <h3 className="author">{this.props.author}</h3>
                 <span dangerouslySetInnerHTML={this.rawMarkup()} />
             </div>
         );
